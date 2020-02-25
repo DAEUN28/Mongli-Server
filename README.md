@@ -14,12 +14,6 @@ Dream diary iOS Application server using [Kitura](https://github.com/IBM-Swift/K
 
 
 
-## Reference
-
-- 
-
-
-
 ## Contribution
 
 I'm always waiting for your contribution.❣️
