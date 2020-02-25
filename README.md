@@ -6,9 +6,15 @@ Dream diary iOS Application server using [Kitura](https://github.com/IBM-Swift/K
 
 `Mong(夢)` is a Chinese character meaning dream.
 
+## Technologies
+
+- [Kitura](https://www.kitura.io)
+- [SwiftKueryMySQL](https://github.com/IBM-Swift/SwiftKueryMySQL)
+- [Swift-Kuery](https://github.com/IBM-Swift/Swift-Kuery)
 
 
-## Reference​
+
+## Reference
 
 - 
 
