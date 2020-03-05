@@ -90,3 +90,9 @@ fastlane/test_output
 iOSInjectionProject/
 
 .DS_Store
+
+privateKey.key
+
+publicKey.key.pub
+
+Sources/Mongli-Server/Application/SecurityInformation.swift
