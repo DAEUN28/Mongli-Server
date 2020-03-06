@@ -2,29 +2,33 @@ import Foundation
 
 import Kitura
 import KituraContracts
-import SwiftJWT
 import SwiftKueryMySQL
 import SwiftKuery
+
+func initializeRoutes(app: App) {
+  app.router.post("/auth", handler: app.signInHandler)
+}
 
 public class App {
 
   // MARK: Database
-  private static let poolOptions = ConnectionPoolOptions(initialCapacity: 1, maxCapacity: 5)
-  private static let connectionURL = URL(string: SecurityInformation.databaseURL)!
-  private let pool = MySQLConnection.createPool(url: connectionURL, poolOptions: poolOptions)
-
-  // MARK: JWT
-  private static let jwtSigner = JWTSigner.rs256(privateKey: SecurityInformation.privateKey)
-  private static let jwtVerifier = JWTVerifier.rs256(publicKey: SecurityInformation.publicKey)
-  private let jwtEncoder = JWTEncoder(jwtSigner: jwtSigner)
-  private let jwtDecoder = JWTDecoder(jwtVerifier: jwtVerifier)
+  let pool: ConnectionPool
 
   // MARK: Kitura
-  private let router = Router()
+  let router = Router()
+  let tokenManager = TokenManager()
 
   public init() {
-    router.encoders[MediaType(type: .application, subType: "jwt")] = { return self.jwtEncoder }
-    router.decoders[MediaType(type: .application, subType: "jwt")] = { return self.jwtDecoder }
+    let poolOptions = ConnectionPoolOptions(initialCapacity: 1, maxCapacity: 5)
+    let connectionURL = URL(string: SecurityInformation.databaseURL)!
+    pool = MySQLConnection.createPool(url: connectionURL, poolOptions: poolOptions)
+    
+    router.encoders[MediaType(type: .application, subType: "jwt")]
+      = { return self.tokenManager.jwtEncoder }
+    router.decoders[MediaType(type: .application, subType: "jwt")]
+      = { return self.tokenManager.jwtDecoder }
+
+    initializeRoutes(app: self)
   }
 
   public func run() {
