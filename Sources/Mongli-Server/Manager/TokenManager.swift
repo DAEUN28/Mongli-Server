@@ -1,10 +1,7 @@
 import Foundation
 
 import Kitura
-import KituraContracts
 import SwiftJWT
-import SwiftKueryMySQL
-import SwiftKuery
 
 final class TokenManager {
   private let jwtSigner: JWTSigner
@@ -19,12 +16,12 @@ final class TokenManager {
     jwtDecoder = JWTDecoder(jwtVerifier: jwtVerifier)
   }
 
-  private func createToken<T: Claims>(_ claim: T) -> String? {
+  func createToken<T: Claims>(_ claim: T) -> String? {
     var jwt = JWT(header: Header(), claims: claim)
     return try? jwt.sign(using: self.jwtSigner)
   }
 
-  private func isVerified<T: Claims>(_ token: String, type: T) -> Bool {
+  func isVerified<T: Claims>(_ token: String, type: T) -> Bool {
     return JWT<T>.verify(token, using: jwtVerifier)
   }
 }
