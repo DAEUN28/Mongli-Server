@@ -9,6 +9,7 @@ enum QueryManager {
   case createUser(_ uid: String, name: String)
   case readUserID(_ uid: String)
   case updateRefreshToken(_ refreshToken: String, id: Int)
+  case readRefreshToken(_ uid: String)
 
   func query() -> Query {
     let userTable = UserTable()
@@ -22,11 +23,15 @@ enum QueryManager {
 
     case let .readUserID(uid):
       return Select(userTable.id, from: userTable)
-        .where(userTable.uid == uid)
+        .where(userTable.uid.like(uid))
 
     case let .updateRefreshToken(refreshToken, id):
       return Update(userTable, set: [(userTable.refreshToken, refreshToken)])
         .where(userTable.id == id)
+
+    case let .readRefreshToken(uid):
+      return Select(userTable.refreshToken, from: userTable)
+        .where(userTable.uid.like(uid))
     }
   }
 }
