@@ -7,9 +7,10 @@ import SwiftKuery
 
 enum QueryManager {
   case createUser(_ uid: String, name: String)
-  case readUserID(_ uid: String)
-  case updateRefreshToken(_ refreshToken: String, id: Int)
+  case readUserIDWithUID(_ uid: String)
+  case readUserIDWithUserID(_ id: Int)
   case readRefreshToken(_ uid: String)
+  case updateRefreshToken(_ refreshToken: String, id: Int)
 
   func query() -> Query {
     let userTable = UserTable()
@@ -21,17 +22,21 @@ enum QueryManager {
                     columns: [userTable.uid, userTable.name],
                     values: [uid, name])
 
-    case let .readUserID(uid):
+    case let .readUserIDWithUID(uid):
       return Select(userTable.id, from: userTable)
+        .where(userTable.uid.like(uid))
+
+    case let .readUserIDWithUserID(id):
+      return Select(userTable.id, from: userTable)
+      .where(userTable.id == id)
+
+    case let .readRefreshToken(uid):
+      return Select(userTable.refreshToken, from: userTable)
         .where(userTable.uid.like(uid))
 
     case let .updateRefreshToken(refreshToken, id):
       return Update(userTable, set: [(userTable.refreshToken, refreshToken)])
         .where(userTable.id == id)
-
-    case let .readRefreshToken(uid):
-      return Select(userTable.refreshToken, from: userTable)
-        .where(userTable.uid.like(uid))
     }
   }
 }

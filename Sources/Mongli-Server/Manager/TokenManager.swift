@@ -16,12 +16,16 @@ final class TokenManager {
     jwtDecoder = JWTDecoder(jwtVerifier: jwtVerifier)
   }
 
-  func createToken<T: Claims>(_ claim: T) -> String? {
+  func createToken<T: TokenClaims>(_ claim: T) -> String? {
     var jwt = JWT(header: Header(), claims: claim)
     return try? jwt.sign(using: self.jwtSigner)
   }
 
-  func isVerified<T: Claims>(_ token: String, type: T) -> Bool {
+  func isVerified<T: TokenClaims>(_ token: String, type: T) -> Bool {
     return JWT<T>.verify(token, using: jwtVerifier)
+  }
+
+  func toUserID<T: TokenClaims>(_ token: String, type: T) -> Int? {
+    return try? JWT<T>(jwtString: token).claims.sub
   }
 }

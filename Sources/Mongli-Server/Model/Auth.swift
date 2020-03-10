@@ -9,3 +9,7 @@ struct Token: Codable {
   let accessToken: String
   let refreshToken: String
 }
+
+struct AccessToken: Codable {
+  let accessToken: String
+}
