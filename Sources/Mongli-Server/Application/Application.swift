@@ -7,6 +7,7 @@ import SwiftKuery
 
 func initializeRoutes(app: App) {
   app.router.post("/auth", handler: app.signInHandler)
+  app.router.get("/auth/token", handler: app.renewalTokenHandler)
 }
 
 public class App {
@@ -32,7 +33,7 @@ public class App {
   }
 
   public func run() {
-    Kitura.addHTTPServer(onPort: 8080, with: router)
+    Kitura.addHTTPServer(onPort: 2525, with: router)
     Kitura.run()
   }
 }
