@@ -11,6 +11,7 @@ enum QueryManager {
   case readUserIDWithUserID(_ id: Int)
   case readRefreshToken(_ uid: String)
   case updateRefreshToken(_ refreshToken: String, id: Int)
+  case updateRefreshTokenToNULL(_ id: Int)
 
   func query() -> Query {
     let userTable = UserTable()
@@ -37,6 +38,10 @@ enum QueryManager {
     case let .updateRefreshToken(refreshToken, id):
       return Update(userTable, set: [(userTable.refreshToken, refreshToken)])
         .where(userTable.id == id)
+
+    case let .updateRefreshTokenToNULL(id):
+      return Update(userTable, set: [(userTable.refreshToken, Parameter("nil"))])
+      .where(userTable.id == id)
     }
   }
 }
