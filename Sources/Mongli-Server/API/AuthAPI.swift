@@ -13,6 +13,9 @@ extension App {
 
   // MARK: SignInHandler
   func signInHandler(auth: Auth, completion: @escaping (Token?, RequestError?) -> Void) {
+    let dispatchGroup = DispatchGroup()
+
+    /// signUp
     if let name = auth.name {
       self.pool.getConnection { [weak self] connection, error in
         guard let self = self, let connection = connection else {
@@ -20,120 +23,94 @@ extension App {
           return completion(nil, .internalServerError)
         }
 
+        dispatchGroup.enter()
         connection.execute(query: QueryManager.createUser(auth.uid, name: name).query()) { result in
           if let error = result.asError {
             Log.error(error.localizedDescription)
             return completion(nil, .internalServerError)
           }
-          
-          connection.execute(query: QueryManager.readUserIDWithUID(auth.uid).query()) { result in
-            guard let resultSet = result.asResultSet else {
-              Log.error(result.asError?.localizedDescription ?? "readUserIDQueryError")
+          dispatchGroup.leave()
+        }
+
+        dispatchGroup.wait()
+        connection.execute(query: QueryManager.readUserIDWithUID(auth.uid).query()) { result in
+          result.asRows { queryResult, error in
+            if let error = error {
+              Log.error(error.localizedDescription)
               return completion(nil, .internalServerError)
             }
 
-            resultSet.forEach(operation: { row, error in
-              guard let id = row?.first as? Int32 else { return }
+            guard let id = queryResult?.first?["id"] as? Int32,
+              let accessToken = self.tokenManager.createToken(AccessTokenClaim(sub: Int(id))),
+              let refreshToken = self.tokenManager.createToken(RefreshTokenClaim(sub: Int(id))) else {
+                Log.error("createTokenError")
+                return completion(nil, .internalServerError)
+            }
 
-              if let error = error {
+            connection.execute(query: QueryManager.updateRefreshToken(refreshToken, id: Int(id)).query()) { result in
+              if let error = result.asError {
                 Log.error(error.localizedDescription)
                 return completion(nil, .internalServerError)
               }
 
-              guard let accessToken = self.tokenManager.createToken(AccessTokenClaim(sub: Int(id))),
-                let refreshToken = self.tokenManager.createToken(RefreshTokenClaim(sub: Int(id))) else {
-                  Log.error("createTokenError")
-                  return completion(nil, .internalServerError)
-              }
-
-              self.pool.getConnection { connection, error in
-                guard let connection = connection else {
-                  Log.error(error?.localizedDescription ?? "connectionError")
-                  return completion(nil, .internalServerError)
-                }
-
-                connection.execute(query: QueryManager.updateRefreshToken(refreshToken, id: Int(id)).query()) { result in
-                  if let error = result.asError {
-                    Log.error(error.localizedDescription)
-                    return completion(nil, .internalServerError)
-                  }
-
-                  let response = Token(accessToken: accessToken, refreshToken: refreshToken)
-                  return completion(response, .created)
-                }
-              }
-            })
+              let response = Token(accessToken: accessToken, refreshToken: refreshToken)
+              return completion(response, .created)
+            }
           }
         }
       }
     }
 
+    /// signIn
     self.pool.getConnection { [weak self] connection, error in
       guard let self = self, let connection = connection else {
         Log.error(error?.localizedDescription ?? "connectionError")
         return completion(nil, .internalServerError)
       }
 
+      dispatchGroup.enter()
       connection.execute(query: QueryManager.readRefreshToken(auth.uid).query()) { result in
-        guard let resultSet = result.asResultSet else {
-          Log.error(result.asError?.localizedDescription ?? "readRefreshTokenError")
-          return completion(nil, .internalServerError)
+        result.asRows { queryResult, error in
+          if let error = error {
+            Log.error(error.localizedDescription)
+            return completion(nil, .internalServerError)
+          }
+          guard let queryResult = queryResult else { return completion(nil, .notFound) }
+          if let _ = queryResult.first?["refreshToken"] as? String { return completion(nil, .conflict) }
+          dispatchGroup.leave()
         }
+      }
 
-        resultSet.forEach(operation: { row, error in
-          guard let _ = row?.first as? String { return }
-
+      dispatchGroup.wait()
+      connection.execute(query: QueryManager.readUserIDWithUID(auth.uid).query()) { result in
+        result.asRows { queryResult, error in
           if let error = error {
             Log.error(error.localizedDescription)
             return completion(nil, .internalServerError)
           }
 
-          return completion(nil, .conflict)
-        })
-
-        connection.execute(query: QueryManager.readUserIDWithUID(auth.uid).query()) { result in
-          guard let resultSet = result.asResultSet else {
-            Log.error(result.asError?.localizedDescription ?? "readUserIDQueryError")
-            return completion(nil, .internalServerError)
+          guard let id = queryResult?.first?["id"] as? Int32,
+            let accessToken = self.tokenManager.createToken(AccessTokenClaim(sub: Int(id))),
+            let refreshToken = self.tokenManager.createToken(RefreshTokenClaim(sub: Int(id))) else {
+              Log.error("createTokenError")
+              return completion(nil, .internalServerError)
           }
 
-          resultSet.forEach(operation: { row, error in
-            guard let id = row?.first as? Int32 else { return }
-
-            if let error = error {
+          connection.execute(query: QueryManager.updateRefreshToken(refreshToken, id: Int(id)).query()) { result in
+            if let error = result.asError {
               Log.error(error.localizedDescription)
               return completion(nil, .internalServerError)
             }
 
-            guard let accessToken = self.tokenManager.createToken(AccessTokenClaim(sub: Int(id))),
-              let refreshToken = self.tokenManager.createToken(RefreshTokenClaim(sub: Int(id))) else {
-                Log.error("createTokenError")
-                return completion(nil, .internalServerError)
-            }
-
-            self.pool.getConnection { connection, error in
-              guard let connection = connection else {
-                Log.error(error?.localizedDescription ?? "connectionError")
-                return completion(nil, .internalServerError)
-              }
-
-              connection.execute(query: QueryManager.updateRefreshToken(refreshToken, id: Int(id)).query()) { result in
-                if let error = result.asError {
-                  Log.error(error.localizedDescription)
-                  return completion(nil, .internalServerError)
-                }
-
-                let response = Token(accessToken: accessToken, refreshToken: refreshToken)
-                return completion(response, .ok)
-              }
-            }
-          })
+            let response = Token(accessToken: accessToken, refreshToken: refreshToken)
+            return completion(response, .ok)
+          }
         }
       }
     }
   }
 
-  // MARK: RenewalToken
+  // MARK: RenewalTokenHandler
   func renewalTokenHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let header = request.headers["Authorization"],
       let refreshToken = header.components(separatedBy: " ").last else {
@@ -159,25 +136,20 @@ extension App {
       }
 
       connection.execute(query: QueryManager.readUserIDWithUserID(id).query()) { result in
-        guard let resultSet = result.asResultSet else {
-          Log.error(result.asError?.localizedDescription ?? "readUserIDQueryError")
-          response.status(.internalServerError)
-          return next()
-        }
-
-        resultSet.forEach(operation: { row, error in
+        result.asRows { queryResult, error in
           if let error = error {
             Log.error(error.localizedDescription)
             response.status(.internalServerError)
             return next()
           }
 
-          guard let id = row?.first as? Int32 else {
-            response.status(.forbidden)
+          guard let queryResult = queryResult else {
+            response.status(.notFound)
             return next()
           }
 
-          guard let accessToken = self.tokenManager.createToken(AccessTokenClaim(sub: Int(id))) else {
+          guard let id = queryResult.first?["id"] as? Int32,
+            let accessToken = self.tokenManager.createToken(AccessTokenClaim(sub: Int(id))) else {
             Log.error("createTokenError")
             response.status(.internalServerError)
             return next()
@@ -186,7 +158,7 @@ extension App {
           response.status(.created)
           response.send(AccessToken(accessToken: accessToken))
           return next()
-        })
+        }
       }
     }
   }
