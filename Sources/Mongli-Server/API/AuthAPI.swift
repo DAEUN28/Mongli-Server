@@ -162,4 +162,43 @@ extension App {
       }
     }
   }
+
+  // MARK: RevokeTokenHAndler
+  func revokeTokenHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
+    guard let header = request.headers["Authorization"],
+      let refreshToken = header.components(separatedBy: " ").last else {
+        response.status(.badRequest)
+        return next()
+    }
+
+    guard let id = self.tokenManager.toUserID(refreshToken, type: RefreshTokenClaim(sub: 0)) else {
+      response.status(.internalServerError)
+      return next()
+    }
+
+    self.pool.getConnection { connection, error in
+      guard let connection = connection else {
+        Log.error(error?.localizedDescription ?? "connectionError")
+        response.status(.internalServerError)
+        return next()
+      }
+
+      let params = ["nil": nil] as [String: Any?]
+      connection.execute(query: QueryManager.updateRefreshTokenToNULL(id).query(), parameters: params) { result in
+        if let error = result.asError {
+          Log.error(error.localizedDescription)
+          response.status(.internalServerError)
+          return next()
+        }
+
+        if let value = result.asValue as? String, value.components(separatedBy: " ").first == "0" {
+          response.status(.notFound)
+          return next()
+        }
+
+        response.status(.noContent)
+        return next()
+      }
+    }
+  }
 }
