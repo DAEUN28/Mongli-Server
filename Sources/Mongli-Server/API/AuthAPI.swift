@@ -81,14 +81,14 @@ extension App {
         }
 
         resultSet.forEach(operation: { row, error in
-          if let _ = row?.first as? String {
-            return completion(nil, .conflict)
-          }
+          guard let _ = row?.first as? String { return }
 
           if let error = error {
             Log.error(error.localizedDescription)
             return completion(nil, .internalServerError)
           }
+
+          return completion(nil, .conflict)
         })
 
         connection.execute(query: QueryManager.readUserIDWithUID(auth.uid).query()) { result in
@@ -166,11 +166,14 @@ extension App {
         }
 
         resultSet.forEach(operation: { row, error in
-          guard let id = row?.first as? Int32 else { return }
-
           if let error = error {
             Log.error(error.localizedDescription)
             response.status(.internalServerError)
+            return next()
+          }
+
+          guard let id = row?.first as? Int32 else {
+            response.status(.forbidden)
             return next()
           }
 
