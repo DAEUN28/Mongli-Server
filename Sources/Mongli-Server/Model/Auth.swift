@@ -13,3 +13,7 @@ struct Token: Codable {
 struct AccessToken: Codable {
   let accessToken: String
 }
+
+struct Name: Codable {
+  let name: String
+}

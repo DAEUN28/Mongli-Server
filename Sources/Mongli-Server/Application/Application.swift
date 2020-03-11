@@ -9,6 +9,7 @@ func initializeRoutes(app: App) {
   app.router.post("/auth", handler: app.signInHandler)
   app.router.get("/auth/token", handler: app.renewalTokenHandler)
   app.router.delete("/auth/token", handler: app.revokeTokenHandler)
+  app.router.patch("/auth", handler: app.renameHandler)
 }
 
 public class App {
