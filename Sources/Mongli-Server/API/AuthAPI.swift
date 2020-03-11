@@ -1,12 +1,9 @@
 import Foundation
 
 import Kitura
-import KituraContracts
 import LoggerAPI
 import SwiftJWT
 import SwiftKueryMySQL
-import SwiftKuery
-import AuthenticationServices
 
 
 extension App {
@@ -111,18 +108,7 @@ extension App {
 
   // MARK: RenewalTokenHandler
   func renewalTokenHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let header = request.headers["Authorization"],
-      let refreshToken = header.components(separatedBy: " ").last else {
-        response.status(.badRequest)
-        return next()
-    }
-
-    if !self.tokenManager.isVerified(refreshToken, type: RefreshTokenClaim(sub: 0)) {
-      response.status(.unauthorized)
-      return next()
-    }
-
-    guard let id = self.tokenManager.toUserID(refreshToken, type: RefreshTokenClaim(sub: 0)) else {
+    guard let id = self.tokenManager.toUserID(request, type: RefreshTokenClaim(sub: 0)) else {
       response.status(.internalServerError)
       return next()
     }
@@ -212,7 +198,7 @@ extension App {
         return next()
     }
 
-    if !self.tokenManager.isVerified(accessToken, type: AccessTokenClaim(sub: 0)) {
+    if !self.tokenManager.isVaildate(accessToken, type: AccessTokenClaim(sub: 0)) {
       response.status(.unauthorized)
       return next()
     }
@@ -249,18 +235,7 @@ extension App {
 
   // MARK: DeleteUserHandler
   func deleteUserHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let header = request.headers["Authorization"],
-      let accessToken = header.components(separatedBy: " ").last else {
-        response.status(.badRequest)
-        return next()
-    }
-
-    if !self.tokenManager.isVerified(accessToken, type: AccessTokenClaim(sub: 0)) {
-      response.status(.unauthorized)
-      return next()
-    }
-
-    guard let id = self.tokenManager.toUserID(accessToken, type: AccessTokenClaim(sub: 0)) else {
+    guard let id = self.tokenManager.toUserID(request, type: AccessTokenClaim(sub: 0)) else {
       response.status(.internalServerError)
       return next()
     }

@@ -21,8 +21,18 @@ final class TokenManager {
     return try? jwt.sign(using: self.jwtSigner)
   }
 
-  func isVerified<T: TokenClaims>(_ token: String, type: T) -> Bool {
-    return JWT<T>.verify(token, using: jwtVerifier)
+  func isVaildate<T: TokenClaims>(_ token: String, type: T) -> Bool {
+    if !JWT<T>.verify(token, using: jwtVerifier) { return false }
+
+    let result = try? JWT<T>(jwtString: token).validateClaims() == .success
+    return result ?? false
+  }
+
+  func toUserID<T: TokenClaims>(_ request: RouterRequest, type: T) -> Int? {
+    guard let header = request.headers["Authorization"],
+      let token = header.components(separatedBy: " ").last else { return nil }
+
+    return try? JWT<T>(jwtString: token).claims.sub
   }
 
   func toUserID<T: TokenClaims>(_ token: String, type: T) -> Int? {
