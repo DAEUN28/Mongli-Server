@@ -10,6 +10,7 @@ func initializeRoutes(app: App) {
   app.router.get("/auth/token", handler: app.renewalTokenHandler)
   app.router.delete("/auth/token", handler: app.revokeTokenHandler)
   app.router.patch("/auth", handler: app.renameHandler)
+  app.router.delete("/auth", handler: app.deleteUserHandler)
 }
 
 public class App {

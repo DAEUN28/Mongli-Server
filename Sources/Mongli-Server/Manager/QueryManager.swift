@@ -13,6 +13,7 @@ enum QueryManager {
   case updateRefreshToken(_ refreshToken: String, id: Int)
   case updateRefreshTokenToNULL(_ id: Int)
   case updateName(_ name: String, id: Int)
+  case deleteUser(_ id: Int)
 
   func query() -> Query {
     let userTable = UserTable()
@@ -46,6 +47,9 @@ enum QueryManager {
     case let .updateName(name, id):
       return Update(userTable, set: [(userTable.name, name)])
         .where(userTable.id == id)
+
+    case let .deleteUser(id):
+      return Delete(from: userTable).where(userTable.id == id)
     }
   }
 }
