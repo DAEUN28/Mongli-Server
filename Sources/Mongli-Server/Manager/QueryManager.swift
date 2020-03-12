@@ -38,8 +38,13 @@ enum QueryManager {
 
     case let .createDream(dream, id):
       return Insert(into: dreamTable,
-                    columns: [dreamTable.userID, dreamTable.date, dreamTable.category, dreamTable.title, dreamTable.content],
-                    values: [id, dream.date, dream.category, dream.title, dream.content])
+                    columns: [dreamTable.userID,
+                              dreamTable.date,
+                              dreamTable.category,
+                              dreamTable.title,
+                              dreamTable.content,
+                              dreamTable.updateTime],
+                    values: [id, dream.date, dream.category, dream.title, dream.content, Date()])
 
     case let .readUserIDWithUID(uid):
       return Select(userTable.id, from: userTable).where(userTable.uid.like(uid))
@@ -73,7 +78,8 @@ enum QueryManager {
       return Update(dreamTable, set: [(dreamTable.date, dream.date),
                                       (dreamTable.category, dream.category),
                                       (dreamTable.title, dream.title),
-                                      (dreamTable.content, dream.content)])
+                                      (dreamTable.content, dream.content),
+                                      (dreamTable.updateTime, Date())])
         .where(dreamTable.id == id)
 
     case let .deleteUser(id):

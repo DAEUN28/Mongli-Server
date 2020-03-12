@@ -19,5 +19,6 @@ class DreamTable: Table {
   let category = Column("category")
   let title = Column("title")
   let content = Column("content")
+  let updateTime = Column("updateTime")
 }
 
