@@ -8,9 +8,11 @@ import SwiftKuery
 func initializeRoutes(app: App) {
   // post
   app.router.post("/auth", handler: app.signInHandler)
+  app.router.post("/dream", handler: app.accessTokenHandler)
+  app.router.post("/dream", handler: app.createDreamHandler)
 
   // get
- app.router.get("/auth/token", handler: app.refreshTokenHandler)
+  app.router.get("/auth/token", handler: app.refreshTokenHandler)
   app.router.get("/auth/token", handler: app.renewalTokenHandler)
 
   // put, patch

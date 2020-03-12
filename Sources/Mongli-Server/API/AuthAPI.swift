@@ -5,7 +5,6 @@ import LoggerAPI
 import SwiftJWT
 import SwiftKueryMySQL
 
-
 extension App {
   // MARK: SignInHandler
   func signInHandler(auth: Auth, completion: @escaping (Token?, RequestError?) -> Void) {
@@ -196,11 +195,6 @@ extension App {
       let accessToken = header.components(separatedBy: " ").last else {
         response.status(.badRequest)
         return next()
-    }
-
-    if !self.tokenManager.isVaildate(accessToken, type: AccessTokenClaim(sub: 0)) {
-      response.status(.unauthorized)
-      return next()
     }
 
     guard let id = self.tokenManager.toUserID(accessToken, type: AccessTokenClaim(sub: 0)) else {

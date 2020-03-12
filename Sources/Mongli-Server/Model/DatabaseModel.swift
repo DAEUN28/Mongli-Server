@@ -14,7 +14,7 @@ class UserTable: Table {
 class DreamTable: Table {
   let tableName = "Dream"
   let id = Column("id", primaryKey: true)
-  let userID = Column("UserID")
+  let userID = Column("userID")
   let date = Column("date")
   let category = Column("category")
   let title = Column("title")
