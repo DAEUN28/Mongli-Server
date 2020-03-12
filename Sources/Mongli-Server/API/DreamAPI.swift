@@ -106,4 +106,27 @@ extension App {
       }
     }
   }
+
+  // MARK: DeleteDreamHandler
+  func deleteDreamHandler(id: ID, completion: @escaping (RequestError?) -> Void) {
+    self.pool.getConnection { connection, error in
+      guard let connection = connection else {
+        Log.error(error?.localizedDescription ?? "connectionError")
+        return completion(.internalServerError)
+      }
+
+      connection.execute(query: QueryManager.deleteDream(id.id).query()) { result in
+        if let error = result.asError {
+          Log.error(error.localizedDescription)
+          return completion(.internalServerError)
+        }
+
+        if let value = result.asValue as? String, value.components(separatedBy: " ").first == "0" {
+          return completion(.notFound)
+        }
+
+        return completion(.noContent)
+      }
+    }
+  }
 }

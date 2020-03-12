@@ -24,6 +24,7 @@ enum QueryManager {
 
   // delete
   case deleteUser(_ id: Int)
+  case deleteDream(_ id: Int)
 
   func query() -> Query {
     let userTable = UserTable()
@@ -77,6 +78,9 @@ enum QueryManager {
 
     case let .deleteUser(id):
       return Delete(from: userTable).where(userTable.id == id)
+
+    case let .deleteDream(id):
+      return Delete(from: dreamTable).where(dreamTable.id == id)
     }
   }
 }

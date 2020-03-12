@@ -27,6 +27,8 @@ func initializeRoutes(app: App) {
   app.router.delete("/auth/token", handler: app.revokeTokenHandler)
   app.router.delete("/auth", handler: app.accessTokenHandler)
   app.router.delete("/auth", handler: app.deleteUserHandler)
+  app.router.delete("/dream/:id", handler: app.accessTokenHandler)
+  app.router.delete("/dream/:id", handler: app.deleteDreamHandler)
 }
 
 public class App {
