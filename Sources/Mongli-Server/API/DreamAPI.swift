@@ -15,7 +15,7 @@ extension App {
         return next()
     }
 
-    guard let id = self.tokenManager.toUserID(accessToken, type: AccessTokenClaim(sub: 0)) else {
+    guard let id = self.tokenManager.toUserID(accessToken) else {
       response.status(.internalServerError)
       return next()
     }

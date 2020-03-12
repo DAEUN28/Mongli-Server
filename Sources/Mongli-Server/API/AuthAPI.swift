@@ -36,8 +36,8 @@ extension App {
             }
 
             guard let id = queryResult?.first?["id"] as? Int32,
-              let accessToken = self.tokenManager.createToken(AccessTokenClaim(sub: Int(id))),
-              let refreshToken = self.tokenManager.createToken(RefreshTokenClaim(sub: Int(id))) else {
+              let accessToken = self.tokenManager.createToken(Int(id), type: .access),
+              let refreshToken = self.tokenManager.createToken(Int(id), type: .refresh) else {
                 Log.error("createTokenError")
                 return completion(nil, .internalServerError)
             }
@@ -85,8 +85,8 @@ extension App {
           }
 
           guard let id = queryResult?.first?["id"] as? Int32,
-            let accessToken = self.tokenManager.createToken(AccessTokenClaim(sub: Int(id))),
-            let refreshToken = self.tokenManager.createToken(RefreshTokenClaim(sub: Int(id))) else {
+            let accessToken = self.tokenManager.createToken(Int(id), type: .access),
+            let refreshToken = self.tokenManager.createToken(Int(id), type: .refresh) else {
               Log.error("createTokenError")
               return completion(nil, .internalServerError)
           }
@@ -107,7 +107,7 @@ extension App {
 
   // MARK: RenewalTokenHandler
   func renewalTokenHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let id = self.tokenManager.toUserID(request, type: RefreshTokenClaim(sub: 0)) else {
+    guard let id = self.tokenManager.toUserID(request) else {
       response.status(.internalServerError)
       return next()
     }
@@ -133,7 +133,7 @@ extension App {
           }
 
           guard let id = queryResult.first?["id"] as? Int32,
-            let accessToken = self.tokenManager.createToken(AccessTokenClaim(sub: Int(id))) else {
+            let accessToken = self.tokenManager.createToken(Int(id), type: .access) else {
               Log.error("createTokenError")
               response.status(.internalServerError)
               return next()
@@ -155,7 +155,7 @@ extension App {
         return next()
     }
 
-    guard let id = self.tokenManager.toUserID(refreshToken, type: RefreshTokenClaim(sub: 0)) else {
+    guard let id = self.tokenManager.toUserID(refreshToken) else {
       response.status(.internalServerError)
       return next()
     }
@@ -197,7 +197,7 @@ extension App {
         return next()
     }
 
-    guard let id = self.tokenManager.toUserID(accessToken, type: AccessTokenClaim(sub: 0)) else {
+    guard let id = self.tokenManager.toUserID(accessToken) else {
       response.status(.internalServerError)
       return next()
     }
@@ -229,7 +229,7 @@ extension App {
 
   // MARK: DeleteUserHandler
   func deleteUserHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let id = self.tokenManager.toUserID(request, type: AccessTokenClaim(sub: 0)) else {
+    guard let id = self.tokenManager.toUserID(request) else {
       response.status(.internalServerError)
       return next()
     }

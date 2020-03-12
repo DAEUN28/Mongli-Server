@@ -16,26 +16,34 @@ final class TokenManager {
     jwtDecoder = JWTDecoder(jwtVerifier: jwtVerifier)
   }
 
-  func createToken<T: TokenClaims>(_ claim: T) -> String? {
-    var jwt = JWT(header: Header(), claims: claim)
+  func createToken(_ id: Int, type: TokenType) -> String? {
+    var jwt: JWT<TokenClaims>
+
+    switch type {
+    case .access:
+      jwt = JWT(header: Header(), claims: TokenClaims(exp: Date(timeIntervalSinceNow: 1), sub: id))
+    case .refresh:
+      jwt = JWT(header: Header(), claims: TokenClaims(exp: Date(timeIntervalSinceNow: 1209600), sub: id))
+    }
+
     return try? jwt.sign(using: self.jwtSigner)
   }
 
-  func isVaildate<T: TokenClaims>(_ token: String, type: T) -> Bool {
-    if !JWT<T>.verify(token, using: jwtVerifier) { return false }
+  func isVaildate(_ token: String) -> Bool {
+    if !JWT<TokenClaims>.verify(token, using: jwtVerifier) { return false }
 
-    let result = try? JWT<T>(jwtString: token).validateClaims() == .success
+    let result = try? JWT<TokenClaims>(jwtString: token, verifier: jwtVerifier).validateClaims() == .success
     return result ?? false
   }
 
-  func toUserID<T: TokenClaims>(_ request: RouterRequest, type: T) -> Int? {
+  func toUserID(_ request: RouterRequest) -> Int? {
     guard let header = request.headers["Authorization"],
       let token = header.components(separatedBy: " ").last else { return nil }
 
-    return try? JWT<T>(jwtString: token).claims.sub
+    return try? JWT<TokenClaims>(jwtString: token).claims.sub
   }
 
-  func toUserID<T: TokenClaims>(_ token: String, type: T) -> Int? {
-    return try? JWT<T>(jwtString: token).claims.sub
+  func toUserID(_ token: String) -> Int? {
+    return try? JWT<TokenClaims>(jwtString: token).claims.sub
   }
 }

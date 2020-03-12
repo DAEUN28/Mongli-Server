@@ -64,7 +64,7 @@ public class App {
         return try response.status(.badRequest).end()
     }
 
-    if !self.tokenManager.isVaildate(accessToken, type: AccessTokenClaim(sub: 0)) {
+    if !self.tokenManager.isVaildate(accessToken) {
       return try response.status(.unauthorized).end()
     }
 
@@ -77,7 +77,7 @@ public class App {
         return try response.status(.badRequest).end()
     }
 
-    if !self.tokenManager.isVaildate(accessToken, type: RefreshTokenClaim(sub: 0)) {
+    if !self.tokenManager.isVaildate(accessToken) {
       return try response.status(.unauthorized).end()
     }
     
