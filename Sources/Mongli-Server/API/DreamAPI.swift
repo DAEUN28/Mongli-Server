@@ -41,25 +41,18 @@ extension App {
   }
 
   // MARK: ReadDreamHandler
-  func readDreamHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let params = request.parameters["id"], let id = Int(params) else {
-      response.status(.badRequest)
-      return next()
-    }
-
+  func readDreamHandler(id: ID, completion: @escaping (Dream?, RequestError?) -> Void) {
     self.pool.getConnection { connection, error in
       guard let connection = connection else {
         Log.error(error?.localizedDescription ?? "connectionError")
-        response.status(.internalServerError)
-        return next()
+        return completion(nil, .internalServerError)
       }
 
-      connection.execute(query: QueryManager.readDream(id).query()) { result in
+      connection.execute(query: QueryManager.readDream(id.id).query()) { result in
         result.asRows { queryResult, error in
           if let error = error {
             Log.error(error.localizedDescription)
-            response.status(.internalServerError)
-            return next()
+            return completion(nil, .internalServerError)
           }
 
           guard let queryResult = queryResult,
@@ -68,13 +61,11 @@ extension App {
             let category = queryResult.first?["category"] as? Int32,
             let title = queryResult.first?["title"] as? String,
             let content = queryResult.first?["content"] as? String else {
-            response.status(.notFound)
-            return next()
+              return completion(nil, .notFound)
           }
 
-          response.status(.OK)
-            .send(Dream(id: Int(id), date: date, category: Int(category), title: title, content: content))
-          return next()
+          let dream = Dream(id: Int(id), date: date, category: Int(category), title: title, content: content)
+          return completion(dream, .ok)
         }
       }
     }
@@ -83,8 +74,8 @@ extension App {
   // MARK: UpdateDreamHandler
   func updateDreamHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let dream = try? request.read(as: Dream.self), let id = dream.id else {
-        response.status(.badRequest)
-        return next()
+      response.status(.badRequest)
+      return next()
     }
 
     self.pool.getConnection { connection, error in
