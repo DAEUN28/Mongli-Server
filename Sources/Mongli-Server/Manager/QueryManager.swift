@@ -20,6 +20,7 @@ enum QueryManager {
   case updateRefreshToken(_ refreshToken: String, id: Int)
   case updateRefreshTokenToNULL(_ id: Int)
   case updateName(_ name: String, id: Int)
+  case updateDream(_ dream: Dream, id: Int)
 
   // delete
   case deleteUser(_ id: Int)
@@ -66,6 +67,13 @@ enum QueryManager {
     case let .updateName(name, id):
       return Update(userTable, set: [(userTable.name, name)])
         .where(userTable.id == id)
+
+    case let .updateDream(dream, id):
+      return Update(dreamTable, set: [(dreamTable.date, dream.date),
+                                      (dreamTable.category, dream.category),
+                                      (dreamTable.title, dream.title),
+                                      (dreamTable.content, dream.content)])
+        .where(dreamTable.id == id)
 
     case let .deleteUser(id):
       return Delete(from: userTable).where(userTable.id == id)

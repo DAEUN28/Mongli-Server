@@ -20,6 +20,8 @@ func initializeRoutes(app: App) {
   // put, patch
   app.router.patch("/auth", handler: app.accessTokenHandler)
   app.router.patch("/auth", handler: app.renameHandler)
+  app.router.put("/dream", handler: app.accessTokenHandler)
+  app.router.put("/dream", handler: app.updateDreamHandler)
 
   // delete
   app.router.delete("/auth/token", handler: app.revokeTokenHandler)

@@ -79,4 +79,31 @@ extension App {
       }
     }
   }
+
+  // MARK: UpdateDreamHandler
+  func updateDreamHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
+    guard let dream = try? request.read(as: Dream.self), let id = dream.id else {
+        response.status(.badRequest)
+        return next()
+    }
+
+    self.pool.getConnection { connection, error in
+      guard let connection = connection else {
+        Log.error(error?.localizedDescription ?? "connectionError")
+        response.status(.internalServerError)
+        return next()
+      }
+
+      connection.execute(query: QueryManager.updateDream(dream, id: id).query()) { result in
+        if let error = result.asError {
+          Log.error(error.localizedDescription)
+          response.status(.internalServerError)
+          return next()
+        }
+
+        response.status(.noContent)
+        return next()
+      }
+    }
+  }
 }
