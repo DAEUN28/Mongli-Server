@@ -18,17 +18,17 @@ struct SummaryDreams: Codable {
     var result = [SummaryDream]()
 
     for dic in queryResult {
-      guard let id = dic["id"] as? Int32,
-        let category = dic["category"] as? Int32,
+      guard let id = dic["id"] as? NSNumber,
+        let category = dic["category"] as? NSNumber,
         let title = dic["title"] as? String,
         let content = dic["content"] as? String else { return nil }
 
       let summary = content.components(separatedBy: [".", "\n"]).first
         ?? String(content[content.startIndex..<content.index(content.startIndex, offsetBy: 28)])
 
-      result.append(SummaryDream(id: Int(id),
+      result.append(SummaryDream(id: Int(truncating: id),
                                  date: dic["date"] as? String,
-                                 category: Int(category),
+                                 category: Int(truncating: category),
                                  title: title,
                                  summary: summary))
     }

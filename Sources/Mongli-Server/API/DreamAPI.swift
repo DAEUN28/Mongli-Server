@@ -56,15 +56,19 @@ extension App {
           }
 
           guard let queryResult = queryResult,
-            let id = queryResult.first?["id"] as? Int32,
+            let id = queryResult.first?["id"] as? NSNumber,
             let date = queryResult.first?["date"] as? String,
-            let category = queryResult.first?["category"] as? Int32,
+            let category = queryResult.first?["category"] as? NSNumber,
             let title = queryResult.first?["title"] as? String,
             let content = queryResult.first?["content"] as? String else {
               return completion(nil, .notFound)
           }
 
-          let dream = Dream(id: Int(id), date: date, category: Int(category), title: title, content: content)
+          let dream = Dream(id: Int(truncating: id),
+                            date: date,
+                            category: Int(truncating: category),
+                            title: title,
+                            content: content)
           return completion(dream, .ok)
         }
       }
@@ -127,7 +131,7 @@ extension App {
   func readMonthlyDreamsHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let header = request.headers["Authorization"],
       let accessToken = header.components(separatedBy: " ").last,
-      let month = request.queryParameters["month"] else {
+      let month = request.parameters["month"] else {
         response.status(.badRequest)
         return next()
     }
@@ -160,15 +164,15 @@ extension App {
           var result = [String: [Int]]()
 
           for dic in queryResult {
-            guard let date = dic["date"] as? String, let category = dic["category"] as? Int32 else {
+            guard let date = dic["date"] as? String, let category = dic["category"] as? NSNumber else {
               response.status(.internalServerError)
               return next()
             }
 
             if result[date] == nil {
-              result[date] = [Int(category)]
+              result[date] = [Int(truncating: category)]
             } else {
-              result[date]?.append(Int(category))
+              result[date]?.append(Int(truncating: category))
             }
           }
 
@@ -184,7 +188,7 @@ extension App {
   func readDailyDreamsHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let header = request.headers["Authorization"],
       let accessToken = header.components(separatedBy: " ").last,
-      let date = request.queryParameters["date"] else {
+      let date = request.parameters["date"] else {
         response.status(.badRequest)
         return next()
     }
