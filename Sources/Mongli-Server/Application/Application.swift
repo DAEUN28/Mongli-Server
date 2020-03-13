@@ -7,28 +7,28 @@ import SwiftKuery
 
 func initializeRoutes(app: App) {
   // post
-  app.router.post("/auth", handler: app.signInHandler)
-  app.router.post("/dream", handler: [app.tokenHandler, app.createDreamHandler])
+  app.router.post("/api/auth", handler: app.signInHandler)
+  app.router.post("/api/dream", handler: [app.tokenHandler, app.createDreamHandler])
 
   // get
-  app.router.get("/auth/token", handler: [app.tokenHandler, app.renewalTokenHandler])
-  app.router.get("/auth", handler: [app.tokenHandler, app.readUserAnalysisHandler])
-  app.router.get("/dream/:id", handler: app.tokenHandler)
-  app.router.get("/dream/:id", handler: app.readDreamHandler)
-  app.router.get("/calendar/:month", handler: [app.tokenHandler, app.readMonthlyDreamsHandler])
-  app.router.get("/dreams/:date", handler: [app.tokenHandler, app.readDailyDreamsHandler])
-  app.router.get("/search", handler: [app.tokenHandler, app.searchDreamHandler])
+  app.router.get("/api/auth/token", handler: [app.tokenHandler, app.renewalTokenHandler])
+  app.router.get("/api/auth", handler: [app.tokenHandler, app.readUserAnalysisHandler])
+  app.router.get("/api/dream/:id", handler: app.tokenHandler)
+  app.router.get("/api/dream/:id", handler: app.readDreamHandler)
+  app.router.get("/api/calendar/:month", handler: [app.tokenHandler, app.readMonthlyDreamsHandler])
+  app.router.get("/api/dreams/:date", handler: [app.tokenHandler, app.readDailyDreamsHandler])
+  app.router.get("/api/search", handler: [app.tokenHandler, app.searchDreamHandler])
   
   // put, patch
-  app.router.patch("/auth", handler: [app.tokenHandler, app.renameHandler])
-  app.router.put("/dream", handler: [app.tokenHandler, app.updateDreamHandler])
+  app.router.patch("/api/auth", handler: [app.tokenHandler, app.renameHandler])
+  app.router.put("/api/dream", handler: [app.tokenHandler, app.updateDreamHandler])
 
   // delete
-  app.router.delete("/auth/token", handler: app.revokeTokenHandler)
-  app.router.delete("/auth", handler: [app.tokenHandler, app.deleteUserHandler])
-  app.router.delete("/dream/:id", handler: app.tokenHandler)
-  app.router.delete("/dream/:id", handler: app.deleteDreamHandler)
-  app.router.delete("/dream", handler: [app.tokenHandler, app.deleteDailyDreamsHandler])
+  app.router.delete("/api/auth/token", handler: app.revokeTokenHandler)
+  app.router.delete("/api/auth", handler: [app.tokenHandler, app.deleteUserHandler])
+  app.router.delete("/api/dream/:id", handler: app.tokenHandler)
+  app.router.delete("/api/dream/:id", handler: app.deleteDreamHandler)
+  app.router.delete("/api/dream", handler: [app.tokenHandler, app.deleteDailyDreamsHandler])
 }
 
 public class App {
