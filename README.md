@@ -18,7 +18,7 @@ Dream diary iOS Application server using Swift
 
 - [Kitura](https://www.kitura.io)
 - [SwiftKueryMySQL](https://github.com/IBM-Swift/SwiftKueryMySQL)
-- [Swift-Kuery](https://github.com/IBM-Swift/Swift-Kuery)
+- [HeliumLogger](https://github.com/IBM-Swift/HeliumLogger)
 - [Swift-JWT](https://github.com/IBM-Swift/Swift-JWT)
 
 
