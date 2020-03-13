@@ -221,8 +221,8 @@ extension App {
               let category = dic["category"] as? Int32,
               let title = dic["title"] as? String,
               let content = dic["content"] as? String else {
-              response.status(.internalServerError)
-              return next()
+                response.status(.internalServerError)
+                return next()
             }
 
             let summary = content.components(separatedBy: [".", "\n"]).first
@@ -233,6 +233,47 @@ extension App {
 
           response.status(.OK)
           response.send(["dreams": result])
+          return next()
+        }
+      }
+    }
+  }
+
+  // MARK: DeleteDailyDreamsHandler
+  func deleteDailyDreamsHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
+    guard let header = request.headers["Authorization"],
+      let accessToken = header.components(separatedBy: " ").last,
+      let date = request.queryParameters["date"] else {
+        response.status(.badRequest)
+        return next()
+    }
+
+    guard let id = self.tokenManager.toUserID(accessToken) else {
+      response.status(.internalServerError)
+      return next()
+    }
+
+    self.pool.getConnection { connection, error in
+      guard let connection = connection else {
+        Log.error(error?.localizedDescription ?? "connectionError")
+        response.status(.internalServerError)
+        return next()
+      }
+
+      connection.execute(query: QueryManager.deleteDailyDreams(date, id: id).query()) { result in
+        result.asRows { queryResult, error in
+          if let error = result.asError {
+            Log.error(error.localizedDescription)
+            response.status(.internalServerError)
+            return next()
+          }
+
+          if let value = result.asValue as? String, value.components(separatedBy: " ").first == "0" {
+            response.status(.notFound)
+            return next()
+          }
+
+          response.status(.noContent)
           return next()
         }
       }

@@ -33,6 +33,8 @@ func initializeRoutes(app: App) {
   app.router.delete("/auth", handler: app.deleteUserHandler)
   app.router.delete("/dream/:id", handler: app.accessTokenHandler)
   app.router.delete("/dream/:id", handler: app.deleteDreamHandler)
+  app.router.delete("/dream", handler: app.accessTokenHandler)
+  app.router.delete("/dream", handler: app.deleteDailyDreamsHandler)
 }
 
 public class App {
