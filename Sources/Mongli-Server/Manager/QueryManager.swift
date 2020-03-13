@@ -15,7 +15,8 @@ enum QueryManager {
   case readRefreshTokenWithUserID(_ id: Int)
   case readRefreshToken(_ uid: String)
   case readDream(_ id: Int)
-  case readMonthlyDream(_ month: String, id: Int)
+  case readMonthlyDreams(_ month: String, id: Int)
+  case readDailyDreams(_ date: String, id: Int)
 
   // update
   case updateRefreshToken(_ refreshToken: String, id: Int)
@@ -63,10 +64,15 @@ enum QueryManager {
                     from: dreamTable)
         .where(dreamTable.id == id)
 
-    case let .readMonthlyDream(month, id):
+    case let .readMonthlyDreams(month, id):
       return Select([dreamTable.date, dreamTable.category], from: dreamTable)
         .where(dreamTable.date.like(month + "%") && dreamTable.userID == id)
         .order(by: [OrderBy.DESC(dreamTable.date), OrderBy.ASC(dreamTable.updateTime)])
+
+    case let .readDailyDreams(date, id):
+      return Select([dreamTable.id, dreamTable.category, dreamTable.title, dreamTable.content], from: dreamTable)
+        .where(dreamTable.date.like(date) && dreamTable.userID == id)
+        .order(by: OrderBy.ASC(dreamTable.updateTime))
       
     case let .updateRefreshToken(refreshToken, id):
       return Update(userTable, set: [(userTable.refreshToken, refreshToken)])

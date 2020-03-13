@@ -11,6 +11,13 @@ struct Dream: Codable {
   let content: String
 }
 
+struct DailyDream: Codable {
+  let id: Int
+  let category: Int
+  let title: String
+  let summary: String
+}
+
 struct ID: Identifier {
   let id: Int
 
