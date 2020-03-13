@@ -16,6 +16,8 @@ func initializeRoutes(app: App) {
   app.router.get("/auth/token", handler: app.renewalTokenHandler)
   app.router.get("/dream/:id", handler: app.accessTokenHandler)
   app.router.get("/dream/:id", handler: app.readDreamHandler)
+  app.router.get("/dream/:month", handler: app.accessTokenHandler)
+  app.router.get("/dream/:month", handler: app.readMonthlyDreamsHandler)
   
   // put, patch
   app.router.patch("/auth", handler: app.accessTokenHandler)

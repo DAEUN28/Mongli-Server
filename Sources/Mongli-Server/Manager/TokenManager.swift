@@ -21,7 +21,7 @@ final class TokenManager {
 
     switch type {
     case .access:
-      jwt = JWT(header: Header(), claims: TokenClaims(exp: Date(timeIntervalSinceNow: 1), sub: id))
+      jwt = JWT(header: Header(), claims: TokenClaims(exp: Date(timeIntervalSinceNow: 3600), sub: id))
     case .refresh:
       jwt = JWT(header: Header(), claims: TokenClaims(exp: Date(timeIntervalSinceNow: 1209600), sub: id))
     }

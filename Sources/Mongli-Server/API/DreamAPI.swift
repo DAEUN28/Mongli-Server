@@ -9,8 +9,8 @@ extension App {
   // MARK: CreateDreamHandler
   func createDreamHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let header = request.headers["Authorization"],
-      let dream = try? request.read(as: Dream.self),
-      let accessToken = header.components(separatedBy: " ").last else {
+      let accessToken = header.components(separatedBy: " ").last,
+      let dream = try? request.read(as: Dream.self) else {
         response.status(.badRequest)
         return next()
     }
@@ -117,6 +117,65 @@ extension App {
         }
 
         return completion(.noContent)
+      }
+    }
+  }
+}
+
+extension App {
+  // MARK: ReadMonthlyDreamsHandler
+  func readMonthlyDreamsHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
+    guard let header = request.headers["Authorization"],
+      let accessToken = header.components(separatedBy: " ").last,
+      let month = request.parameters["month"] else {
+        response.status(.badRequest)
+        return next()
+    }
+
+    guard let id = self.tokenManager.toUserID(accessToken) else {
+      response.status(.internalServerError)
+      return next()
+    }
+
+    self.pool.getConnection { connection, error in
+      guard let connection = connection else {
+        Log.error(error?.localizedDescription ?? "connectionError")
+        response.status(.internalServerError)
+        return next()
+      }
+
+      connection.execute(query: QueryManager.readMonthlyDream(month, id: id).query()) { result in
+        result.asRows { queryResult, error in
+          if let error = result.asError {
+            Log.error(error.localizedDescription)
+            response.status(.internalServerError)
+            return next()
+          }
+
+          guard let queryResult = queryResult else {
+            response.status(.notFound)
+            return next()
+          }
+
+          var result = [String: [Int]]()
+
+          for dic in queryResult {
+            guard let date = dic["date"] as? String, let category = dic["category"] as? Int32 else {
+              response.status(.notFound)
+              return next()
+            }
+
+            if result[date] == nil {
+              result[date] = [Int(category)]
+            } else {
+              result[date]?.append(Int(category))
+            }
+          }
+
+          response.status(.OK)
+          response.send(result)
+          return next()
+        }
       }
     }
   }

@@ -28,7 +28,7 @@ extension App {
         }
 
         dispatchGroup.wait()
-        connection.execute(query: QueryManager.readUserIDWithUID(auth.uid).query()) { result in
+        connection.execute(query: QueryManager.readUserID(auth.uid).query()) { result in
           result.asRows { queryResult, error in
             if let error = error {
               Log.error(error.localizedDescription)
@@ -77,7 +77,7 @@ extension App {
       }
 
       dispatchGroup.wait()
-      connection.execute(query: QueryManager.readUserIDWithUID(auth.uid).query()) { result in
+      connection.execute(query: QueryManager.readUserID(auth.uid).query()) { result in
         result.asRows { queryResult, error in
           if let error = error {
             Log.error(error.localizedDescription)
@@ -107,9 +107,11 @@ extension App {
 
   // MARK: RenewalTokenHandler
   func renewalTokenHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let id = self.tokenManager.toUserID(request) else {
-      response.status(.internalServerError)
-      return next()
+    guard let header = request.headers["Authorization"],
+      let token = header.components(separatedBy: " ").last,
+      let id = tokenManager.toUserID(token) else {
+        response.status(.badRequest)
+        return next()
     }
 
     self.pool.getConnection { [weak self] connection, error in
@@ -119,7 +121,7 @@ extension App {
         return next()
       }
 
-      connection.execute(query: QueryManager.readUserIDWithUserID(id).query()) { result in
+      connection.execute(query: QueryManager.readRefreshTokenWithUserID(id).query()) { result in
         result.asRows { queryResult, error in
           if let error = error {
             Log.error(error.localizedDescription)
@@ -132,11 +134,16 @@ extension App {
             return next()
           }
 
-          guard let id = queryResult.first?["id"] as? Int32,
-            let accessToken = self.tokenManager.createToken(Int(id), type: .access) else {
+          guard let refreshToken = queryResult.first?["refreshToken"] as? String,
+            let accessToken = self.tokenManager.createToken(id, type: .access) else {
               Log.error("createTokenError")
               response.status(.internalServerError)
               return next()
+          }
+
+          if token != refreshToken {
+            response.status(.conflict)
+            return next()
           }
 
           response.status(.created)
