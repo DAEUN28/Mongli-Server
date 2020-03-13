@@ -17,6 +17,7 @@ enum QueryManager {
   case readDream(_ id: Int)
   case readMonthlyDreams(_ month: String, id: Int)
   case readDailyDreams(_ date: String, id: Int)
+  case readDreams(_ condition: SearchCondition, id: Int)
 
   // update
   case updateRefreshToken(_ refreshToken: String, id: Int)
@@ -28,11 +29,13 @@ enum QueryManager {
   case deleteUser(_ id: Int)
   case deleteDream(_ id: Int)
   case deleteDailyDreams(_ date: String, id: Int)
+}
 
+extension QueryManager {
   func query() -> Query {
     let userTable = UserTable()
     let dreamTable = DreamTable()
-    
+
     switch self {
     case let .createUser(uid, name):
       return Insert(into: userTable,
@@ -74,7 +77,40 @@ enum QueryManager {
       return Select([dreamTable.id, dreamTable.category, dreamTable.title, dreamTable.content], from: dreamTable)
         .where(dreamTable.date.like(date) && dreamTable.userID == id)
         .order(by: OrderBy.ASC(dreamTable.updateTime))
+
+    case let .readDreams(condition, id):
+      var query = Select([dreamTable.id, dreamTable.date, dreamTable.category, dreamTable.title, dreamTable.content],
+                         from: dreamTable)
+        .limit(to: 10)
+        .offset(condition.page * 10)
+
+      var queryFilters = [Filter]()
+
+      if condition.criteria == 0 {
+        queryFilters.append(dreamTable.title.like("%" + condition.keyword! + "%"))
+      } else if condition.criteria == 1 {
+        queryFilters.append(dreamTable.content.like("%" + condition.keyword! + "%"))
+      }
+
+      if let category = condition.category {
+        queryFilters.append(dreamTable.category == category)
+      }
+
+      if let period = condition.period?.components(separatedBy: "~"),
+        let start = period.first, let end = period.last {
+        queryFilters.append(dreamTable.date.between(start, and: end))
+      }
+
+      query = query.where(queryFilters.reduce(dreamTable.userID == id) { $0 && $1 })
+
+      if condition.alignment == 0 {
+        query = query.order(by: OrderBy.DESC(dreamTable.date))
+      } else {
+        query = query.order(by: OrderBy.ASC(dreamTable.date))
+      }
       
+      return query
+
     case let .updateRefreshToken(refreshToken, id):
       return Update(userTable, set: [(userTable.refreshToken, refreshToken)])
         .where(userTable.id == id)

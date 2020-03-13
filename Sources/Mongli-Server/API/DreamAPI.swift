@@ -214,25 +214,13 @@ extension App {
             return next()
           }
 
-          var result = [DailyDream]()
-
-          for dic in queryResult {
-            guard let id = dic["id"] as? Int32,
-              let category = dic["category"] as? Int32,
-              let title = dic["title"] as? String,
-              let content = dic["content"] as? String else {
-                response.status(.internalServerError)
-                return next()
-            }
-
-            let summary = content.components(separatedBy: [".", "\n"]).first
-              ?? String(content[content.startIndex..<content.index(content.startIndex, offsetBy: 28)])
-
-            result.append(DailyDream(id: Int(id), category: Int(category), title: title, summary: summary))
+          guard let result = SummaryDreams(queryResult) else {
+            response.status(.internalServerError)
+            return next()
           }
 
           response.status(.OK)
-          response.send(["dreams": result])
+          response.send(result)
           return next()
         }
       }
@@ -274,6 +262,53 @@ extension App {
           }
 
           response.status(.noContent)
+          return next()
+        }
+      }
+    }
+  }
+
+  // MARK: SearchDreamHandler
+  func searchDreamHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
+    guard let header = request.headers["Authorization"],
+      let accessToken = header.components(separatedBy: " ").last,
+      let condition = SearchCondition(request.queryParameters) else {
+        response.status(.badRequest)
+        return next()
+    }
+
+    guard let id = self.tokenManager.toUserID(accessToken) else {
+      response.status(.internalServerError)
+      return next()
+    }
+
+    self.pool.getConnection { connection, error in
+      guard let connection = connection else {
+        Log.error(error?.localizedDescription ?? "connectionError")
+        response.status(.internalServerError)
+        return next()
+      }
+
+      connection.execute(query: QueryManager.readDreams(condition, id: id).query()) { result in
+        result.asRows { queryResult, error in
+          if let error = result.asError {
+            Log.error(error.localizedDescription)
+            response.status(.internalServerError)
+            return next()
+          }
+
+          guard let queryResult = queryResult else {
+            response.status(.noContent)
+            return next()
+          }
+
+          guard let result = SummaryDreams(queryResult) else {
+            response.status(.internalServerError)
+            return next()
+          }
+
+          response.status(.OK)
+          response.send(result)
           return next()
         }
       }
