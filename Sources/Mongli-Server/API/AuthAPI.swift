@@ -159,14 +159,10 @@ extension App {
   // MARK: RevokeTokenHAndler
   func revokeTokenHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let header = request.headers["Authorization"],
-      let refreshToken = header.components(separatedBy: " ").last else {
+      let refreshToken = header.components(separatedBy: " ").last,
+      let id = self.tokenManager.toUserID(refreshToken) else {
         response.status(.badRequest)
         return next()
-    }
-
-    guard let id = self.tokenManager.toUserID(refreshToken) else {
-      response.status(.internalServerError)
-      return next()
     }
 
     self.pool.getConnection { connection, error in
@@ -199,16 +195,10 @@ extension App {
 extension App {
   // MARK: RenameHandler
   func renameHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let header = request.headers["Authorization"],
-      let name = try? request.read(as: Name.self).name,
-      let accessToken = header.components(separatedBy: " ").last else {
+    guard let name = try? request.read(as: Name.self).name,
+      let id = self.tokenManager.toUserID(request) else {
         response.status(.badRequest)
         return next()
-    }
-
-    guard let id = self.tokenManager.toUserID(accessToken) else {
-      response.status(.internalServerError)
-      return next()
     }
 
     self.pool.getConnection { connection, error in
@@ -271,7 +261,7 @@ extension App {
   // MARK: ReadUserAnalysisHandler
   func readUserAnalysisHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let id = self.tokenManager.toUserID(request) else {
-      response.status(.internalServerError)
+      response.status(.badRequest)
       return next()
     }
 
@@ -297,7 +287,7 @@ extension App {
           guard let queryResult = queryResult?.first,
             let name = queryResult["name"] as? String,
             let total = queryResult["total"] as? NSNumber else {
-              response.status(.notFound)
+              response.status(.noContent)
               return next()
           }
 
@@ -317,7 +307,7 @@ extension App {
           }
 
           guard let queryResults = queryResults else {
-            response.status(.notFound)
+            response.status(.noContent)
             return next()
           }
 

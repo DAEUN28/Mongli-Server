@@ -8,18 +8,12 @@ import SwiftKueryMySQL
 extension App {
   // MARK: CreateDreamHandler
   func createDreamHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let header = request.headers["Authorization"],
-      let accessToken = header.components(separatedBy: " ").last,
-      let dream = try? request.read(as: Dream.self) else {
+    guard let dream = try? request.read(as: Dream.self),
+      let id = self.tokenManager.toUserID(request) else {
         response.status(.badRequest)
         return next()
     }
-
-    guard let id = self.tokenManager.toUserID(accessToken) else {
-      response.status(.internalServerError)
-      return next()
-    }
-
+    
     self.pool.getConnection { connection, error in
       guard let connection = connection else {
         Log.error(error?.localizedDescription ?? "connectionError")
@@ -31,6 +25,11 @@ extension App {
         if let error = result.asError {
           Log.error(error.localizedDescription)
           response.status(.internalServerError)
+          return next()
+        }
+
+        if let value = result.asValue as? String, value.components(separatedBy: " ").first == "0" {
+          response.status(.notFound)
           return next()
         }
 
@@ -129,16 +128,10 @@ extension App {
 extension App {
   // MARK: ReadMonthlyDreamsHandler
   func readMonthlyDreamsHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let header = request.headers["Authorization"],
-      let accessToken = header.components(separatedBy: " ").last,
-      let month = request.parameters["month"] else {
+    guard let month = request.parameters["month"],
+      let id = self.tokenManager.toUserID(request) else {
         response.status(.badRequest)
         return next()
-    }
-
-    guard let id = self.tokenManager.toUserID(accessToken) else {
-      response.status(.internalServerError)
-      return next()
     }
 
     self.pool.getConnection { connection, error in
@@ -186,16 +179,10 @@ extension App {
 
   // MARK: ReadDailyDreamsHandler
   func readDailyDreamsHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let header = request.headers["Authorization"],
-      let accessToken = header.components(separatedBy: " ").last,
-      let date = request.parameters["date"] else {
+    guard let date = request.parameters["date"],
+      let id = self.tokenManager.toUserID(request) else {
         response.status(.badRequest)
         return next()
-    }
-
-    guard let id = self.tokenManager.toUserID(accessToken) else {
-      response.status(.internalServerError)
-      return next()
     }
 
     self.pool.getConnection { connection, error in
@@ -233,16 +220,10 @@ extension App {
 
   // MARK: DeleteDailyDreamsHandler
   func deleteDailyDreamsHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let header = request.headers["Authorization"],
-      let accessToken = header.components(separatedBy: " ").last,
-      let date = request.queryParameters["date"] else {
+    guard let date = request.queryParameters["date"],
+      let id = self.tokenManager.toUserID(accessToken) else {
         response.status(.badRequest)
         return next()
-    }
-
-    guard let id = self.tokenManager.toUserID(accessToken) else {
-      response.status(.internalServerError)
-      return next()
     }
 
     self.pool.getConnection { connection, error in
@@ -274,16 +255,10 @@ extension App {
 
   // MARK: SearchDreamHandler
   func searchDreamHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let header = request.headers["Authorization"],
-      let accessToken = header.components(separatedBy: " ").last,
-      let condition = SearchCondition(request.queryParameters) else {
+    guard let condition = SearchCondition(request.queryParameters),
+      let id = self.tokenManager.toUserID(accessToken) else {
         response.status(.badRequest)
         return next()
-    }
-
-    guard let id = self.tokenManager.toUserID(accessToken) else {
-      response.status(.internalServerError)
-      return next()
     }
 
     self.pool.getConnection { connection, error in

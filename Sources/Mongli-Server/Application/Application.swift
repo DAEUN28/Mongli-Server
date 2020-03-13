@@ -17,7 +17,7 @@ func initializeRoutes(app: App) {
   app.router.get("/api/dream/:id", handler: app.readDreamHandler)
   app.router.get("/api/calendar/:month", handler: [app.tokenHandler, app.readMonthlyDreamsHandler])
   app.router.get("/api/dreams/:date", handler: [app.tokenHandler, app.readDailyDreamsHandler])
-  app.router.get("/api/search", handler: [app.tokenHandler, app.searchDreamHandler])
+  app.router.get("/api/dreams", handler: [app.tokenHandler, app.searchDreamHandler])
   
   // put, patch
   app.router.patch("/api/auth", handler: [app.tokenHandler, app.renameHandler])
@@ -28,7 +28,7 @@ func initializeRoutes(app: App) {
   app.router.delete("/api/auth", handler: [app.tokenHandler, app.deleteUserHandler])
   app.router.delete("/api/dream/:id", handler: app.tokenHandler)
   app.router.delete("/api/dream/:id", handler: app.deleteDreamHandler)
-  app.router.delete("/api/dream", handler: [app.tokenHandler, app.deleteDailyDreamsHandler])
+  app.router.delete("/api/dreams", handler: [app.tokenHandler, app.deleteDailyDreamsHandler])
 }
 
 public class App {
