@@ -19,7 +19,6 @@ struct Name: Codable {
 }
 
 struct UserAnalysis: Codable {
-  var name: String = ""
   var total: Int = 0
   var red: Int = 0
   var orange: Int = 0
@@ -31,6 +30,8 @@ struct UserAnalysis: Codable {
   var purple: Int = 0
 
   mutating func insert(_ category: Int, count: Int) -> Bool {
+    self.total += count
+    
     switch category {
     case 0: self.red = count
     case 1: self.orange = count

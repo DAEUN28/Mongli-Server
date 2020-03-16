@@ -19,7 +19,6 @@ enum QueryManager {
   case readDailyDreams(_ date: String, id: Int)
   case readDreams(_ condition: SearchCondition, id: Int)
   case readUserAnalysis(_ id: Int)
-  case readUserInfo(_ id: Int)
 
   // update
   case updateRefreshToken(_ refreshToken: String, id: Int)
@@ -118,12 +117,6 @@ extension QueryManager {
         .leftJoin(userTable)
         .on(dreamTable.userID == userTable.id)
         .group(by: dreamTable.category)
-        .where(userTable.id == id)
-
-    case let .readUserInfo(id):
-      return Select([userTable.name, count(dreamTable.id).as("total")], from: dreamTable)
-        .leftJoin(userTable)
-        .on(dreamTable.userID == userTable.id)
         .where(userTable.id == id)
 
     case let .updateRefreshToken(refreshToken, id):

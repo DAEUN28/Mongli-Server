@@ -221,7 +221,7 @@ extension App {
   // MARK: DeleteDailyDreamsHandler
   func deleteDailyDreamsHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let date = request.queryParameters["date"],
-      let id = self.tokenManager.toUserID(accessToken) else {
+      let id = self.tokenManager.toUserID(request) else {
         response.status(.badRequest)
         return next()
     }
@@ -256,7 +256,7 @@ extension App {
   // MARK: SearchDreamHandler
   func searchDreamHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let condition = SearchCondition(request.queryParameters),
-      let id = self.tokenManager.toUserID(accessToken) else {
+      let id = self.tokenManager.toUserID(request) else {
         response.status(.badRequest)
         return next()
     }

@@ -272,32 +272,6 @@ extension App {
         return next()
       }
 
-      let dispatchGroup = DispatchGroup()
-      var userAnalysis = UserAnalysis()
-
-      dispatchGroup.enter()
-      connection.execute(query: QueryManager.readUserInfo(id).query()) { result in
-        result.asRows { queryResult, error in
-          if let error = error {
-            Log.error(error.localizedDescription)
-            response.status(.internalServerError)
-            return next()
-          }
-
-          guard let queryResult = queryResult?.first,
-            let name = queryResult["name"] as? String,
-            let total = queryResult["total"] as? NSNumber else {
-              response.status(.noContent)
-              return next()
-          }
-
-          userAnalysis.name = name
-          userAnalysis.total = Int(truncating: total)
-          dispatchGroup.leave()
-        }
-      }
-
-      dispatchGroup.wait()
       connection.execute(query: QueryManager.readUserAnalysis(id).query()) { result in
         result.asRows { queryResults, error in
           if let error = error {
@@ -310,6 +284,8 @@ extension App {
             response.status(.noContent)
             return next()
           }
+
+          var userAnalysis = UserAnalysis()
 
           for queryResult in queryResults {
             guard let category = queryResult["category"] as? NSNumber,
