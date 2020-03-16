@@ -12,7 +12,7 @@ func initializeRoutes(app: App) {
 
   // get
   app.router.get("/api/auth/token", handler: [app.tokenHandler, app.renewalTokenHandler])
-  app.router.get("/api/auth", handler: [app.tokenHandler, app.readUserAnalysisHandler])
+  app.router.get("/api/auth", handler: [app.tokenHandler, app.readAnalysisHandler])
   app.router.get("/api/dream/:id", handler: app.tokenHandler)
   app.router.get("/api/dream/:id", handler: app.readDreamHandler)
   app.router.get("/api/calendar/:month", handler: [app.tokenHandler, app.readMonthlyDreamsHandler])

@@ -258,8 +258,8 @@ extension App {
     }
   }
 
-  // MARK: ReadUserAnalysisHandler
-  func readUserAnalysisHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
+  // MARK: ReadAnalysisHandler
+  func readAnalysisHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let id = self.tokenManager.toUserID(request) else {
       response.status(.badRequest)
       return next()
