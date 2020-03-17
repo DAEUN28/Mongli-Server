@@ -220,7 +220,7 @@ extension App {
 
   // MARK: DeleteDailyDreamsHandler
   func deleteDailyDreamsHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
-    guard let date = request.queryParameters["date"],
+    guard let date = request.parameters["date"],
       let id = self.tokenManager.toUserID(request) else {
         response.status(.badRequest)
         return next()
