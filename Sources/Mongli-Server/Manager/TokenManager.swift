@@ -16,14 +16,16 @@ final class TokenManager {
     jwtDecoder = JWTDecoder(jwtVerifier: jwtVerifier)
   }
 
-  func createToken(_ id: Int, type: TokenType) -> String? {
+  func createToken(_ id: Int, name: String, type: TokenType) -> String? {
     var jwt: JWT<TokenClaims>
 
     switch type {
     case .access:
-      jwt = JWT(header: Header(), claims: TokenClaims(exp: Date(timeIntervalSinceNow: 3600), sub: id))
+      jwt = JWT(header: Header(),
+                claims: TokenClaims(exp: Date(timeIntervalSinceNow: 3600), id: id, name: name))
     case .refresh:
-      jwt = JWT(header: Header(), claims: TokenClaims(exp: Date(timeIntervalSinceNow: 1209600), sub: id))
+      jwt = JWT(header: Header(),
+                claims: TokenClaims(exp: Date(timeIntervalSinceNow: 1209600), id: id, name: name))
     }
 
     return try? jwt.sign(using: self.jwtSigner)
@@ -40,10 +42,14 @@ final class TokenManager {
     guard let header = request.headers["Authorization"],
       let token = header.components(separatedBy: " ").last else { return nil }
 
-    return try? JWT<TokenClaims>(jwtString: token).claims.sub
+    return try? JWT<TokenClaims>(jwtString: token).claims.id
+  }
+
+  func toUserName(_ token: String) -> String? {
+    return try? JWT<TokenClaims>(jwtString: token).claims.name
   }
 
   func toUserID(_ token: String) -> Int? {
-    return try? JWT<TokenClaims>(jwtString: token).claims.sub
+    return try? JWT<TokenClaims>(jwtString: token).claims.id
   }
 }

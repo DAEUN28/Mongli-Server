@@ -28,7 +28,7 @@ extension App {
         }
 
         dispatchGroup.wait()
-        connection.execute(query: QueryManager.readUserID(auth.uid).query()) { result in
+        connection.execute(query: QueryManager.readUserIDAndName(auth.uid).query()) { result in
           result.asRows { queryResult, error in
             if let error = error {
               Log.error(error.localizedDescription)
@@ -36,8 +36,8 @@ extension App {
             }
 
             guard let id = queryResult?.first?["id"] as? NSNumber,
-              let accessToken = self.tokenManager.createToken(Int(truncating: id), type: .access),
-              let refreshToken = self.tokenManager.createToken(Int(truncating: id), type: .refresh) else {
+              let accessToken = self.tokenManager.createToken(Int(truncating: id), name: name, type: .access),
+              let refreshToken = self.tokenManager.createToken(Int(truncating: id), name: name, type: .refresh) else {
                 Log.error("createTokenError")
                 return completion(nil, .internalServerError)
             }
@@ -78,7 +78,7 @@ extension App {
       }
 
       dispatchGroup.wait()
-      connection.execute(query: QueryManager.readUserID(auth.uid).query()) { result in
+      connection.execute(query: QueryManager.readUserIDAndName(auth.uid).query()) { result in
         result.asRows { queryResult, error in
           if let error = error {
             Log.error(error.localizedDescription)
@@ -86,8 +86,9 @@ extension App {
           }
 
           guard let id = queryResult?.first?["id"] as? NSNumber,
-            let accessToken = self.tokenManager.createToken(Int(truncating: id), type: .access),
-            let refreshToken = self.tokenManager.createToken(Int(truncating: id), type: .refresh) else {
+            let name = queryResult?.first?["name"] as? String,
+            let accessToken = self.tokenManager.createToken(Int(truncating: id), name: name, type: .access),
+            let refreshToken = self.tokenManager.createToken(Int(truncating: id), name: name, type: .refresh) else {
               Log.error("createTokenError")
               return completion(nil, .internalServerError)
           }
@@ -111,7 +112,8 @@ extension App {
   func renewalTokenHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let header = request.headers["Authorization"],
       let token = header.components(separatedBy: " ").last,
-      let id = tokenManager.toUserID(token) else {
+      let id = tokenManager.toUserID(token),
+      let name = tokenManager.toUserName(token) else {
         response.status(.badRequest)
         return next()
     }
@@ -137,7 +139,7 @@ extension App {
           }
 
           guard let refreshToken = queryResult.first?["refreshToken"] as? String,
-            let accessToken = self.tokenManager.createToken(id, type: .access) else {
+            let accessToken = self.tokenManager.createToken(id, name: name, type: .access) else {
               Log.error("createTokenError")
               response.status(.internalServerError)
               return next()

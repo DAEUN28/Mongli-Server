@@ -11,7 +11,7 @@ enum QueryManager {
   case createDream(_ dream: Dream, id: Int)
 
   // read
-  case readUserID(_ uid: String)
+  case readUserIDAndName(_ uid: String)
   case readRefreshTokenWithUserID(_ id: Int)
   case readRefreshToken(_ uid: String)
   case readDream(_ id: Int)
@@ -53,8 +53,9 @@ extension QueryManager {
                               dreamTable.updateTime],
                     values: [id, dream.date, dream.category, dream.title, dream.content, Date()])
 
-    case let .readUserID(uid):
-      return Select(userTable.id, from: userTable).where(userTable.uid.like(uid))
+    case let .readUserIDAndName(uid):
+      return Select([userTable.id, userTable.name], from: userTable)
+        .where(userTable.uid.like(uid))
 
     case let .readRefreshTokenWithUserID(id):
       return Select(userTable.refreshToken, from: userTable)

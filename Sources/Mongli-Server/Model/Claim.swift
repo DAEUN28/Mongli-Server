@@ -4,7 +4,8 @@ import SwiftJWT
 
 struct TokenClaims: Claims {
   var exp: Date?
-  var sub: Int
+  var id: Int
+  var name: String
 }
 
 enum TokenType {
