@@ -3,14 +3,12 @@ import Foundation
 import Kitura
 import LoggerAPI
 import SwiftJWT
+import SwiftKuery
 import SwiftKueryMySQL
 
 extension App {
   // MARK: SignInHandler
   func signInHandler(auth: Auth, completion: @escaping (Token?, RequestError?) -> Void) {
-    let dispatchGroup = DispatchGroup()
-
-    /// signUp
     if let name = auth.name {
       self.pool.getConnection { [weak self] connection, error in
         guard let self = self, let connection = connection else {
@@ -18,51 +16,16 @@ extension App {
           return completion(nil, .internalServerError)
         }
 
-        dispatchGroup.enter()
-        connection.execute(query: QueryManager.createUser(auth.uid, name).query()) { result in
-          if let error = result.asError {
-            Log.error(error.localizedDescription)
-            return completion(nil, .internalServerError)
-          }
-          dispatchGroup.leave()
-        }
-
-        dispatchGroup.wait()
-        connection.execute(query: QueryManager.readUserIDAndName(auth.uid).query()) { result in
-          result.asRows { queryResult, error in
-            if let error = error {
-              Log.error(error.localizedDescription)
-              return completion(nil, .internalServerError)
-            }
-
-            guard let id = queryResult?.first?["id"] as? NSNumber,
-              let accessToken = self.tokenManager.createToken(Int(truncating: id), name: name, type: .access),
-              let refreshToken = self.tokenManager.createToken(Int(truncating: id), name: name, type: .refresh) else {
-                Log.error("createTokenError")
-                return completion(nil, .internalServerError)
-            }
-
-            connection
-              .execute(query: QueryManager.updateRefreshToken(refreshToken, id: Int(truncating: id)).query()) { result in
-                if let error = result.asError {
-                  Log.error(error.localizedDescription)
-                  return completion(nil, .internalServerError)
-                }
-
-                let response = Token(accessToken: accessToken, refreshToken: refreshToken)
-                return completion(response, .created)
-            }
-          }
-        }
+        self.createUser(uid: auth.uid, name: name, connection: connection, completion: completion)
       }
     }
 
-    /// signIn
     self.pool.getConnection { [weak self] connection, error in
       guard let self = self, let connection = connection else {
         Log.error(error?.localizedDescription ?? "connectionError")
         return completion(nil, .internalServerError)
       }
+      let dispatchGroup = DispatchGroup()
 
       dispatchGroup.enter()
       connection.execute(query: QueryManager.readRefreshToken(auth.uid).query()) { result in
@@ -71,7 +34,11 @@ extension App {
             Log.error(error.localizedDescription)
             return completion(nil, .internalServerError)
           }
-          guard let queryResult = queryResult else { return completion(nil, .notFound) }
+
+          guard let queryResult = queryResult else {
+            return self.createUser(uid: auth.uid, name: "Mongli", connection: connection, completion: completion)
+          }
+
           if let _ = queryResult.first?["refreshToken"] as? String { return completion(nil, .conflict) }
           dispatchGroup.leave()
         }
@@ -108,6 +75,52 @@ extension App {
     }
   }
 
+  private func createUser(uid: String,
+                          name: String,
+                          connection: Connection,
+                          completion: @escaping (Token?, RequestError?) -> Void) {
+    let dispatchGroup = DispatchGroup()
+
+    dispatchGroup.enter()
+    connection.execute(query: QueryManager.createUser(uid, name).query()) { result in
+      if let error = result.asError {
+        Log.error(error.localizedDescription)
+        return completion(nil, .internalServerError)
+      }
+      dispatchGroup.leave()
+    }
+
+    dispatchGroup.wait()
+    connection.execute(query: QueryManager.readUserIDAndName(uid).query()) { result in
+      result.asRows { queryResult, error in
+        if let error = error {
+          Log.error(error.localizedDescription)
+          return completion(nil, .internalServerError)
+        }
+
+        guard let id = queryResult?.first?["id"] as? NSNumber,
+          let accessToken = self.tokenManager.createToken(Int(truncating: id), name: name, type: .access),
+          let refreshToken = self.tokenManager.createToken(Int(truncating: id), name: name, type: .refresh) else {
+            Log.error("createTokenError")
+            return completion(nil, .internalServerError)
+        }
+
+        connection
+          .execute(query: QueryManager.updateRefreshToken(refreshToken, id: Int(truncating: id)).query()) { result in
+            if let error = result.asError {
+              Log.error(error.localizedDescription)
+              return completion(nil, .internalServerError)
+            }
+
+            let response = Token(accessToken: accessToken, refreshToken: refreshToken)
+            return completion(response, .created)
+        }
+      }
+    }
+  }
+}
+
+extension App {
   // MARK: RenewalTokenHandler
   func renewalTokenHandler(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
     guard let header = request.headers["Authorization"],
