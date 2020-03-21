@@ -30,6 +30,7 @@ enum QueryManager {
   case deleteUser(_ id: Int)
   case deleteDream(_ id: Int)
   case deleteDailyDreams(_ date: String, id: Int)
+  case deleteAllDream(_ id: Int)
 }
 
 extension QueryManager {
@@ -148,6 +149,9 @@ extension QueryManager {
 
     case let .deleteDailyDreams(date, id):
       return Delete(from: dreamTable).where(dreamTable.date.like(date) && dreamTable.userID == id)
+
+    case let .deleteAllDream(id):
+      return Delete(from: dreamTable).where(dreamTable.userID == id)
     }
   }
 }

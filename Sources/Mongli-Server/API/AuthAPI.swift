@@ -254,7 +254,20 @@ extension App {
         response.status(.internalServerError)
         return next()
       }
+      let dispatchGroup = DispatchGroup()
 
+      dispatchGroup.enter()
+      connection.execute(query: QueryManager.deleteAllDream(id).query()) { result in
+        if let error = result.asError {
+          Log.error(error.localizedDescription)
+          response.status(.internalServerError)
+          return next()
+        }
+
+        dispatchGroup.leave()
+      }
+
+      dispatchGroup.wait()
       connection.execute(query: QueryManager.deleteUser(id).query()) { result in
         if let error = result.asError {
           Log.error(error.localizedDescription)
