@@ -2,6 +2,7 @@ import Foundation
 
 import Kitura
 import KituraContracts
+import LoggerAPI
 import SwiftKueryMySQL
 import SwiftKuery
 
@@ -65,11 +66,14 @@ public class App {
     }
 
     if !self.tokenManager.isVaildate(accessToken) {
-      self.pool.getConnection { connection, error in
-        guard let connection = connection else {
+      let dispatchGroup = DispatchGroup()
+      dispatchGroup.enter()
+      self.pool.getConnection { [weak self] connection, error in
+        guard let connection = connection,
+          let id = self?.tokenManager.toUserID(accessToken) else {
           Log.error(error?.localizedDescription ?? "connectionError")
           response.status(.internalServerError)
-          return next()
+          return dispatchGroup.leave()
         }
 
         let params = ["nil": nil] as [String: Any?]
@@ -77,16 +81,23 @@ public class App {
           if let error = result.asError {
             Log.error(error.localizedDescription)
             response.status(.internalServerError)
-            return next()
+            return dispatchGroup.leave()
           }
 
           if let value = result.asValue as? String, value.components(separatedBy: " ").first == "0" {
             response.status(.notFound)
-            return next()
+            return dispatchGroup.leave()
           }
 
-          try response.status(.unauthorized).end()
+          response.status(.unauthorized)
+          return dispatchGroup.leave()
         }
+      }
+
+      dispatchGroup.wait()
+      switch response.statusCode {
+      case .internalServerError, .notFound, .unauthorized: try response.end()
+      default: break
       }
     }
 
