@@ -65,7 +65,29 @@ public class App {
     }
 
     if !self.tokenManager.isVaildate(accessToken) {
-      return try response.status(.unauthorized).end()
+      self.pool.getConnection { connection, error in
+        guard let connection = connection else {
+          Log.error(error?.localizedDescription ?? "connectionError")
+          response.status(.internalServerError)
+          return next()
+        }
+
+        let params = ["nil": nil] as [String: Any?]
+        connection.execute(query: QueryManager.updateRefreshTokenToNULL(id).query(), parameters: params) { result in
+          if let error = result.asError {
+            Log.error(error.localizedDescription)
+            response.status(.internalServerError)
+            return next()
+          }
+
+          if let value = result.asValue as? String, value.components(separatedBy: " ").first == "0" {
+            response.status(.notFound)
+            return next()
+          }
+
+          try response.status(.unauthorized).end()
+        }
+      }
     }
 
     return next()
