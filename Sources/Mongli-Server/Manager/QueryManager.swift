@@ -18,6 +18,7 @@ enum QueryManager {
   case readMonthlyDreams(_ month: String, id: Int)
   case readDailyDreams(_ date: String, id: Int)
   case readDreams(_ condition: SearchCondition, id: Int)
+  case readDreamsCount(_ condition: SearchCondition, id: Int)
   case readUserAnalysis(_ id: Int)
 
   // update
@@ -112,6 +113,36 @@ extension QueryManager {
         query = query.order(by: OrderBy.ASC(dreamTable.date))
       }
       
+      return query
+
+    case let .readDreamsCount(condition, id):
+      var query = Select(count(dreamTable.id).as("total"), from: dreamTable)
+
+      var queryFilters = [Filter]()
+
+      if condition.criteria == 0 {
+        queryFilters.append(dreamTable.title.like("%" + condition.keyword! + "%"))
+      } else if condition.criteria == 1 {
+        queryFilters.append(dreamTable.content.like("%" + condition.keyword! + "%"))
+      }
+
+      if let category = condition.category {
+        queryFilters.append(dreamTable.category == category)
+      }
+
+      if let period = condition.period?.components(separatedBy: "~"),
+        let start = period.first, let end = period.last {
+        queryFilters.append(dreamTable.date.between(start, and: end))
+      }
+
+      query = query.where(queryFilters.reduce(dreamTable.userID == id) { $0 && $1 })
+
+      if condition.alignment == 0 {
+        query = query.order(by: OrderBy.DESC(dreamTable.date))
+      } else {
+        query = query.order(by: OrderBy.ASC(dreamTable.date))
+      }
+
       return query
 
     case let .readUserAnalysis(id):

@@ -205,7 +205,7 @@ extension App {
             return next()
           }
 
-          guard let result = SummaryDreams(queryResult) else {
+          guard let result = SummaryDreams(nil, queryResult) else {
             response.status(.internalServerError)
             return next()
           }
@@ -268,6 +268,34 @@ extension App {
         return next()
       }
 
+      let dispatchGroup = DispatchGroup()
+      var total = 0
+
+      dispatchGroup.enter()
+      connection.execute(query: QueryManager.readDreamsCount(condition, id: id).query()) { result in
+        result.asRows { queryResult, error in
+          if let error = result.asError {
+            Log.error(error.localizedDescription)
+            response.status(.internalServerError)
+            return next()
+          }
+
+          guard let queryResult = queryResult else {
+            response.status(.noContent)
+            return next()
+          }
+
+          guard let result = queryResult.first?["total"] as? Int32 else {
+            response.status(.internalServerError)
+            return next()
+          }
+
+          total = Int(result)
+          return dispatchGroup.leave()
+        }
+      }
+
+      dispatchGroup.wait()
       connection.execute(query: QueryManager.readDreams(condition, id: id).query()) { result in
         result.asRows { queryResult, error in
           if let error = result.asError {
@@ -281,7 +309,7 @@ extension App {
             return next()
           }
 
-          guard let result = SummaryDreams(queryResult) else {
+          guard let result = SummaryDreams(total, queryResult) else {
             response.status(.internalServerError)
             return next()
           }

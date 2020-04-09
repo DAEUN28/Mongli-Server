@@ -12,9 +12,10 @@ struct Dream: Codable {
 }
 
 struct SummaryDreams: Codable {
+  let total: Int?
   let dreams: [SummaryDream]
 
-  init?(_ queryResult: [[String : Any?]]) {
+  init?(_ total: Int?, _ queryResult: [[String : Any?]]) {
     var result = [SummaryDream]()
 
     for dic in queryResult {
@@ -33,6 +34,7 @@ struct SummaryDreams: Codable {
                                  summary: summary))
     }
 
+    self.total = total
     self.dreams = result
     return
   }
