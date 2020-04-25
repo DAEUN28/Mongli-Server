@@ -285,7 +285,7 @@ extension App {
             return next()
           }
 
-          guard let result = queryResult.first?["total"] as? Int32 else {
+          guard let result = queryResult.first?["total"] as? Int64 else {
             response.status(.internalServerError)
             return next()
           }
