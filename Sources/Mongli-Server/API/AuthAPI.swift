@@ -39,7 +39,7 @@ extension App {
             return self.createUser(uid: auth.uid, name: "Mongli", connection: connection, completion: completion)
           }
 
-          if let _ = queryResult.first?["refreshToken"] as? String { return completion(nil, .conflict) }
+          if queryResult.first?["refreshToken"] is String { return completion(nil, .conflict) }
           dispatchGroup.leave()
         }
       }

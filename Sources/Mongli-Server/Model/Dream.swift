@@ -73,7 +73,7 @@ struct ID: Identifier {
 struct SearchCondition {
   let page: Int
   let criteria: Int
-  let alignment: Int
+  let sort: Int
   let category: Int?
   let period: String?
   let keyword: String?
@@ -81,10 +81,10 @@ struct SearchCondition {
   init?(_ queryParameters: [String: String]) {
     guard let pageString = queryParameters["page"],
       let criteriaString = queryParameters["criteria"],
-      let alignmentString = queryParameters["alignment"],
+      let sortString = queryParameters["sort"],
       let page = Int(pageString),
       let criteria = Int(criteriaString),
-      let alignment = Int(alignmentString) else { return nil }
+      let sort = Int(sortString) else { return nil }
 
     if criteria != 2 && queryParameters["keyword"]?.isEmpty == true {
       return nil
@@ -92,7 +92,7 @@ struct SearchCondition {
 
     self.page = page
     self.criteria = criteria
-    self.alignment = alignment
+    self.sort = sort
     self.period = queryParameters["period"]
     self.keyword = queryParameters["keyword"]
     

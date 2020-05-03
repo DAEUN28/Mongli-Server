@@ -107,7 +107,7 @@ extension QueryManager {
 
       query = query.where(queryFilters.reduce(dreamTable.userID == id) { $0 && $1 })
 
-      if condition.alignment == 0 {
+      if condition.sort == 0 {
         query = query.order(by: OrderBy.DESC(dreamTable.date))
       } else {
         query = query.order(by: OrderBy.ASC(dreamTable.date))
@@ -137,7 +137,7 @@ extension QueryManager {
 
       query = query.where(queryFilters.reduce(dreamTable.userID == id) { $0 && $1 })
 
-      if condition.alignment == 0 {
+      if condition.sort == 0 {
         query = query.order(by: OrderBy.DESC(dreamTable.date))
       } else {
         query = query.order(by: OrderBy.ASC(dreamTable.date))
