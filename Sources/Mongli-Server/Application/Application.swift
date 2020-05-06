@@ -55,7 +55,7 @@ public class App {
   }
 
   public func run() {
-    Kitura.addHTTPServer(onPort: 2525, with: router)
+    Kitura.addHTTPServer(onPort: 5252, with: router)
     Kitura.run()
   }
 
