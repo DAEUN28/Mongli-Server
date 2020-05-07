@@ -98,3 +98,5 @@ privateKey
 privateKey.pub
 
 .swift-build-linux
+
+.build-unbuntu
