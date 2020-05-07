@@ -39,7 +39,7 @@ extension App {
             return self.createUser(uid: auth.uid, name: "Mongli", connection: connection, completion: completion)
           }
 
-          if queryResult.first?["refreshToken"] is String { return completion(nil, .conflict) }
+          if queryResult.first?["refresh_token"] is String { return completion(nil, .conflict) }
           dispatchGroup.leave()
         }
       }
@@ -151,7 +151,7 @@ extension App {
             return next()
           }
 
-          guard let refreshToken = queryResult.first?["refreshToken"] as? String,
+          guard let refreshToken = queryResult.first?["refresh_token"] as? String,
             let accessToken = self.tokenManager.createToken(id, name: name, type: .access) else {
               Log.error("createTokenError")
               response.status(.internalServerError)
