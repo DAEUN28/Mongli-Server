@@ -96,3 +96,5 @@ Sources/Mongli-Server/Application/SecurityInformation.swift
 privateKey
 
 privateKey.pub
+
+.swift-build-linux
