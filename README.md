@@ -2,7 +2,7 @@
 
 ![](https://user-images.githubusercontent.com/45457678/70604680-66691680-1c3c-11ea-9956-d5d4afc98d18.png)
 
-Dream diary iOS Application server using Swift
+Dream diary iOS Application server using Kitura
 
 `Mong(夢)` is a Chinese character meaning dream.
 
@@ -20,6 +20,10 @@ Dream diary iOS Application server using Swift
 - [SwiftKueryMySQL](https://github.com/IBM-Swift/SwiftKueryMySQL)
 - [HeliumLogger](https://github.com/IBM-Swift/HeliumLogger)
 - [Swift-JWT](https://github.com/IBM-Swift/Swift-JWT)
+- AWS-EC2
+- AWS-RDS
+- Docker
+- https
 
 
 
@@ -29,6 +33,8 @@ Mongli is my personal project for 🌱beginner🌱 developers.
 So you can use my code for your development!
 Mongli is being managed in Notion📝
 To use my code, I recommend visit [Notion](https://www.notion.so/mongli/Mongli-while-dreaming-73d75833c8b44438911e7e360e5cb8b6).
+
+You can using [API](https://acone1128.gitbook.io/mongli-while-dreaming/) until May 5, 2021😎
 
 
 
