@@ -6,6 +6,8 @@ Dream diary iOS Application server using Kitura
 
 `Mong(夢)` is a Chinese character meaning dream.
 
+[한글문서](https://github.com/DAEUN28/Mongli-Server/blob/master/README-KR.md)
+
 
 
 ## App Features
@@ -22,7 +24,7 @@ Dream diary iOS Application server using Kitura
 - [Swift-JWT](https://github.com/IBM-Swift/Swift-JWT)
 - AWS-EC2
 - AWS-RDS
-- Docker
+- Docker([mongli image](https://hub.docker.com/repository/docker/daeun28/mongli/general))
 - https
 
 
@@ -44,14 +46,13 @@ you must provide private key. This could be the contents of a privateKey file ge
 
 ```
 $ ssh-keygen -t rsa -b 4096 -m PEM -f privateKey
-# Don't add a passphrase
 ```
 
 
 
 #### For changing the mysql port
 
-Please refer to the [link](https://daeun28.github.io/삽질사전/mac에서_mysql_포트_변경하기-post/).
+Please refer to the [link](https://daeun28.github.io/삽질일기/post13/).
 But this article is in 🇰🇷Korean🇰🇷.
 
 
