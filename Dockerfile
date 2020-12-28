@@ -4,7 +4,7 @@ MAINTAINER DAEUN28
 COPY . /Mongli-Server
 
 RUN apt-get update
-RUN apt-get install libcurl4-openssl-dev libssl-dev 
+RUN apt-get install -y libcurl4-openssl-dev libssl-dev 
 RUN apt-get install -y libmysqlclient-dev
 
 WORKDIR /Mongli-Server
